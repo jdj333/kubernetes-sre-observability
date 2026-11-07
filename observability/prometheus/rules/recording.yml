@@ -1,0 +1,40 @@
+groups:
+- name: sre-sli
+  rules:
+  - record: sre:availability:bad_ratio5m
+    expr: sum by (job) (rate(sre_http_requests_total{job="sre-api",status_code=~"5.."}[5m]))
+      / sum by (job) (rate(sre_http_requests_total{job="sre-api",status_code=~"2..|5.."}[5m]))
+  - record: sre:latency:bad_ratio5m
+    expr: clamp_min(1 - sum by (job) (rate(sre_http_request_duration_seconds_bucket{job="sre-api",status_code=~"2..|5..",le="0.3"}[5m]))
+      / sum by (job) (rate(sre_http_request_duration_seconds_count{job="sre-api",status_code=~"2..|5.."}[5m])),
+      0)
+  - record: sre:availability:bad_ratio30m
+    expr: sum by (job) (rate(sre_http_requests_total{job="sre-api",status_code=~"5.."}[30m]))
+      / sum by (job) (rate(sre_http_requests_total{job="sre-api",status_code=~"2..|5.."}[30m]))
+  - record: sre:latency:bad_ratio30m
+    expr: clamp_min(1 - sum by (job) (rate(sre_http_request_duration_seconds_bucket{job="sre-api",status_code=~"2..|5..",le="0.3"}[30m]))
+      / sum by (job) (rate(sre_http_request_duration_seconds_count{job="sre-api",status_code=~"2..|5.."}[30m])),
+      0)
+  - record: sre:availability:bad_ratio1h
+    expr: sum by (job) (rate(sre_http_requests_total{job="sre-api",status_code=~"5.."}[1h]))
+      / sum by (job) (rate(sre_http_requests_total{job="sre-api",status_code=~"2..|5.."}[1h]))
+  - record: sre:latency:bad_ratio1h
+    expr: clamp_min(1 - sum by (job) (rate(sre_http_request_duration_seconds_bucket{job="sre-api",status_code=~"2..|5..",le="0.3"}[1h]))
+      / sum by (job) (rate(sre_http_request_duration_seconds_count{job="sre-api",status_code=~"2..|5.."}[1h])),
+      0)
+  - record: sre:availability:bad_ratio6h
+    expr: sum by (job) (rate(sre_http_requests_total{job="sre-api",status_code=~"5.."}[6h]))
+      / sum by (job) (rate(sre_http_requests_total{job="sre-api",status_code=~"2..|5.."}[6h]))
+  - record: sre:latency:bad_ratio6h
+    expr: clamp_min(1 - sum by (job) (rate(sre_http_request_duration_seconds_bucket{job="sre-api",status_code=~"2..|5..",le="0.3"}[6h]))
+      / sum by (job) (rate(sre_http_request_duration_seconds_count{job="sre-api",status_code=~"2..|5.."}[6h])),
+      0)
+  - record: sre:availability:bad_ratio30d
+    expr: sum by (job) (increase(sre_http_requests_total{job="sre-api",status_code=~"5.."}[30d]))
+      / sum by (job) (increase(sre_http_requests_total{job="sre-api",status_code=~"2..|5.."}[30d]))
+  - record: sre:latency:bad_ratio30d
+    expr: clamp_min(1 - sum by (job) (increase(sre_http_request_duration_seconds_bucket{job="sre-api",status_code=~"2..|5..",le="0.3"}[30d]))
+      / sum by (job) (increase(sre_http_request_duration_seconds_count{job="sre-api",status_code=~"2..|5.."}[30d])),
+      0)
+  - record: sre:requests:rate5m
+    expr: sum by (job) (rate(sre_http_requests_total{job="sre-api",status_code=~"2..|5.."}[5m]))
