@@ -1,0 +1,69 @@
+rule_files:
+- ../../observability/prometheus/rules/recording.yml
+evaluation_interval: 1m
+tests:
+- name: healthy
+  input_series:
+  - series: sre_http_requests_total{job="sre-api",status_code="200"}
+    values: 0+100x15
+  - series: sre_http_requests_total{job="sre-api",status_code="503"}
+    values: 0+0x15
+  - series: sre_http_requests_total{job="sre-api",status_code="400"}
+    values: 0+900x15
+  - series: sre_http_request_duration_seconds_count{job="sre-api",status_code="200"}
+    values: 0+100x15
+  - series: sre_http_request_duration_seconds_bucket{job="sre-api",status_code="200",le="0.3"}
+    values: 0+100x15
+  promql_expr_test:
+  - expr: sre:availability:bad_ratio5m
+    eval_time: 10m
+    exp_samples:
+    - labels: sre:availability:bad_ratio5m{job="sre-api"}
+      value: 0
+  - expr: sre:latency:bad_ratio5m
+    eval_time: 10m
+    exp_samples:
+    - labels: sre:latency:bad_ratio5m{job="sre-api"}
+      value: 0
+- name: errors-and-latency
+  input_series:
+  - series: sre_http_requests_total{job="sre-api",status_code="200"}
+    values: 0+80x15
+  - series: sre_http_requests_total{job="sre-api",status_code="503"}
+    values: 0+20x15
+  - series: sre_http_requests_total{job="sre-api",status_code="400"}
+    values: 0+900x15
+  - series: sre_http_request_duration_seconds_count{job="sre-api",status_code="200"}
+    values: 0+100x15
+  - series: sre_http_request_duration_seconds_bucket{job="sre-api",status_code="200",le="0.3"}
+    values: 0+75x15
+  promql_expr_test:
+  - expr: sre:availability:bad_ratio5m
+    eval_time: 10m
+    exp_samples:
+    - labels: sre:availability:bad_ratio5m{job="sre-api"}
+      value: 0.2
+  - expr: sre:latency:bad_ratio5m
+    eval_time: 10m
+    exp_samples:
+    - labels: sre:latency:bad_ratio5m{job="sre-api"}
+      value: 0.25
+- name: zero-traffic
+  input_series:
+  - series: sre_http_requests_total{job="sre-api",status_code="200"}
+    values: 0+0x15
+  - series: sre_http_requests_total{job="sre-api",status_code="503"}
+    values: 0+0x15
+  - series: sre_http_requests_total{job="sre-api",status_code="400"}
+    values: 0+900x15
+  - series: sre_http_request_duration_seconds_count{job="sre-api",status_code="200"}
+    values: 0+0x15
+  - series: sre_http_request_duration_seconds_bucket{job="sre-api",status_code="200",le="0.3"}
+    values: 0+0x15
+  promql_expr_test:
+  - expr: sre:availability:bad_ratio5m == sre:availability:bad_ratio5m
+    eval_time: 10m
+    exp_samples: []
+  - expr: sre:latency:bad_ratio5m == sre:latency:bad_ratio5m
+    eval_time: 10m
+    exp_samples: []
