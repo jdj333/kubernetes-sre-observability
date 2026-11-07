@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sre-lab
+resources:
+- k8s/namespace.yml
+- k8s/rbac.yml
+- k8s/workloads.yml
+configMapGenerator:
+- name: prometheus-config
+  files:
+  - prometheus.yml=observability/prometheus/prometheus-k8s.yml
+- name: prometheus-rules
+  files:
+  - observability/prometheus/rules/recording.yml
+  - observability/prometheus/rules/alerts.yml
+- name: otel-config
+  files:
+  - config.yml=observability/otel-collector.yml
+- name: tempo-config
+  files:
+  - config.yml=observability/tempo.yml
+- name: alertmanager-config
+  files:
+  - alertmanager.yml=observability/alertmanager.yml
+- name: grafana-datasources
+  files:
+  - observability/grafana/provisioning/datasources/datasources.yml
+- name: grafana-providers
+  files:
+  - observability/grafana/provisioning/dashboards/dashboards.yml
+- name: grafana-dashboard
+  files:
+  - observability/grafana/dashboards/sre-overview.json
