@@ -1,0 +1,71 @@
+name: Validate SRE lab
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sre-lab-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  unit-and-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+      - name: Check Prometheus rules and scenarios
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work --entrypoint promtool prom/prometheus:v3.5.0 check rules observability/prometheus/rules/*.yml
+          docker run --rm -v "$PWD:/work" -w /work --entrypoint promtool prom/prometheus:v3.5.0 test rules tests/prometheus/*.test.yml
+      - name: Validate Collector and Alertmanager configuration
+        run: |
+          docker run --rm -v "$PWD/observability/otel-collector.yml:/etc/otelcol/config.yml:ro" otel/opentelemetry-collector-contrib:0.132.0 validate --config=/etc/otelcol/config.yml
+          docker run --rm -v "$PWD/observability/alertmanager.yml:/config.yml:ro" --entrypoint amtool prom/alertmanager:v0.28.1 check-config /config.yml
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [compose, kind]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start Compose
+        if: matrix.runtime == 'compose'
+        run: make up
+      - name: Install kind
+        if: matrix.runtime == 'kind'
+        run: |
+          curl -fsSL https://kind.sigs.k8s.io/dl/v0.30.0/kind-linux-amd64 -o /tmp/kind
+          chmod +x /tmp/kind
+          sudo mv /tmp/kind /usr/local/bin/kind
+      - name: Start Kubernetes lab
+        if: matrix.runtime == 'kind'
+        run: |
+          bash scripts/kind-up.sh
+          bash scripts/port-forward.sh > /tmp/port-forward.log 2>&1 &
+      - name: Verify metrics, recording rules, dashboard, and trace delivery
+        run: python3 scripts/smoke.py
+      - name: Compose diagnostics
+        if: always() && matrix.runtime == 'compose'
+        run: |
+          docker compose ps
+          docker compose logs --tail=100
+          docker compose down
+      - name: Kubernetes diagnostics
+        if: always() && matrix.runtime == 'kind'
+        run: |
+          kubectl --context kind-sre-observability -n sre-lab get pods
+          kubectl --context kind-sre-observability -n sre-lab get events --sort-by=.lastTimestamp
+          for deployment in sre-api prometheus grafana tempo otel-collector alertmanager; do
+            kubectl --context kind-sre-observability -n sre-lab logs deployment/$deployment --tail=50 || true
+          done
+          kind delete cluster --name sre-observability
