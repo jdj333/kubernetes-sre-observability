@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """End-to-end checks against the loopback Compose or port-forwarded kind stack."""
 import json
+from http.client import HTTPException
 import time
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -20,7 +21,7 @@ def eventually(check, label, seconds=120):
             if check():
                 print(f"PASS: {label}")
                 return
-        except (URLError, TimeoutError, ValueError, KeyError) as error:
+        except (URLError, OSError, HTTPException, ValueError, KeyError) as error:
             last = error
         time.sleep(2)
     raise AssertionError(f"Timed out: {label}; last error: {last}")
