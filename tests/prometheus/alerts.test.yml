@@ -1,0 +1,256 @@
+rule_files:
+- ../../observability/prometheus/rules/alerts.yml
+evaluation_interval: 1m
+tests:
+- name: availability Page sustained
+  interval: 1m
+  input_series:
+  - series: sre:availability:bad_ratio1h{job="sre-api"}
+    values: 0.02+0x15
+  - series: sre:availability:bad_ratio5m{job="sre-api"}
+    values: 0.02+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: AvailabilityBudgetBurnPage
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+        service: sre-api
+        slo: availability
+        job: sre-api
+      exp_annotations:
+        summary: Availability error budget is burning too fast
+        description: Both 1h and 5m exceed 14.4x budget burn. Inspect request rate,
+          errors, latency, and traces.
+        runbook_url: https://github.com/jdj333/kubernetes-sre-observability/blob/main/docs/runbook.md#budget-burn
+- name: availability Page healthy
+  interval: 1m
+  input_series:
+  - series: sre:availability:bad_ratio1h{job="sre-api"}
+    values: 0+0x15
+  - series: sre:availability:bad_ratio5m{job="sre-api"}
+    values: 0+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: AvailabilityBudgetBurnPage
+    exp_alerts: []
+- name: availability Page short-spike
+  interval: 1m
+  input_series:
+  - series: sre:availability:bad_ratio1h{job="sre-api"}
+    values: 0+0x15
+  - series: sre:availability:bad_ratio5m{job="sre-api"}
+    values: 0.02+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: AvailabilityBudgetBurnPage
+    exp_alerts: []
+- name: availability Page recovery
+  interval: 1m
+  input_series:
+  - series: sre:availability:bad_ratio1h{job="sre-api"}
+    values: 0.02+0x15
+  - series: sre:availability:bad_ratio5m{job="sre-api"}
+    values: 0+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: AvailabilityBudgetBurnPage
+    exp_alerts: []
+- name: availability Warning sustained
+  interval: 1m
+  input_series:
+  - series: sre:availability:bad_ratio6h{job="sre-api"}
+    values: 0.02+0x15
+  - series: sre:availability:bad_ratio30m{job="sre-api"}
+    values: 0.02+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: AvailabilityBudgetBurnWarning
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+        service: sre-api
+        slo: availability
+        job: sre-api
+      exp_annotations:
+        summary: Availability error budget is burning too fast
+        description: Both 6h and 30m exceed 6x budget burn. Inspect request rate,
+          errors, latency, and traces.
+        runbook_url: https://github.com/jdj333/kubernetes-sre-observability/blob/main/docs/runbook.md#budget-burn
+- name: availability Warning healthy
+  interval: 1m
+  input_series:
+  - series: sre:availability:bad_ratio6h{job="sre-api"}
+    values: 0+0x15
+  - series: sre:availability:bad_ratio30m{job="sre-api"}
+    values: 0+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: AvailabilityBudgetBurnWarning
+    exp_alerts: []
+- name: availability Warning short-spike
+  interval: 1m
+  input_series:
+  - series: sre:availability:bad_ratio6h{job="sre-api"}
+    values: 0+0x15
+  - series: sre:availability:bad_ratio30m{job="sre-api"}
+    values: 0.02+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: AvailabilityBudgetBurnWarning
+    exp_alerts: []
+- name: availability Warning recovery
+  interval: 1m
+  input_series:
+  - series: sre:availability:bad_ratio6h{job="sre-api"}
+    values: 0.02+0x15
+  - series: sre:availability:bad_ratio30m{job="sre-api"}
+    values: 0+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: AvailabilityBudgetBurnWarning
+    exp_alerts: []
+- name: latency Page sustained
+  interval: 1m
+  input_series:
+  - series: sre:latency:bad_ratio1h{job="sre-api"}
+    values: 0.2+0x15
+  - series: sre:latency:bad_ratio5m{job="sre-api"}
+    values: 0.2+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: LatencyBudgetBurnPage
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+        service: sre-api
+        slo: latency
+        job: sre-api
+      exp_annotations:
+        summary: Latency error budget is burning too fast
+        description: Both 1h and 5m exceed 14.4x budget burn. Inspect request rate,
+          errors, latency, and traces.
+        runbook_url: https://github.com/jdj333/kubernetes-sre-observability/blob/main/docs/runbook.md#budget-burn
+- name: latency Page healthy
+  interval: 1m
+  input_series:
+  - series: sre:latency:bad_ratio1h{job="sre-api"}
+    values: 0+0x15
+  - series: sre:latency:bad_ratio5m{job="sre-api"}
+    values: 0+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: LatencyBudgetBurnPage
+    exp_alerts: []
+- name: latency Page short-spike
+  interval: 1m
+  input_series:
+  - series: sre:latency:bad_ratio1h{job="sre-api"}
+    values: 0+0x15
+  - series: sre:latency:bad_ratio5m{job="sre-api"}
+    values: 0.2+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: LatencyBudgetBurnPage
+    exp_alerts: []
+- name: latency Page recovery
+  interval: 1m
+  input_series:
+  - series: sre:latency:bad_ratio1h{job="sre-api"}
+    values: 0.2+0x15
+  - series: sre:latency:bad_ratio5m{job="sre-api"}
+    values: 0+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: LatencyBudgetBurnPage
+    exp_alerts: []
+- name: latency Warning sustained
+  interval: 1m
+  input_series:
+  - series: sre:latency:bad_ratio6h{job="sre-api"}
+    values: 0.2+0x15
+  - series: sre:latency:bad_ratio30m{job="sre-api"}
+    values: 0.2+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: LatencyBudgetBurnWarning
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+        service: sre-api
+        slo: latency
+        job: sre-api
+      exp_annotations:
+        summary: Latency error budget is burning too fast
+        description: Both 6h and 30m exceed 6x budget burn. Inspect request rate,
+          errors, latency, and traces.
+        runbook_url: https://github.com/jdj333/kubernetes-sre-observability/blob/main/docs/runbook.md#budget-burn
+- name: latency Warning healthy
+  interval: 1m
+  input_series:
+  - series: sre:latency:bad_ratio6h{job="sre-api"}
+    values: 0+0x15
+  - series: sre:latency:bad_ratio30m{job="sre-api"}
+    values: 0+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: LatencyBudgetBurnWarning
+    exp_alerts: []
+- name: latency Warning short-spike
+  interval: 1m
+  input_series:
+  - series: sre:latency:bad_ratio6h{job="sre-api"}
+    values: 0+0x15
+  - series: sre:latency:bad_ratio30m{job="sre-api"}
+    values: 0.2+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: LatencyBudgetBurnWarning
+    exp_alerts: []
+- name: latency Warning recovery
+  interval: 1m
+  input_series:
+  - series: sre:latency:bad_ratio6h{job="sre-api"}
+    values: 0.2+0x15
+  - series: sre:latency:bad_ratio30m{job="sre-api"}
+    values: 0+0x15
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: LatencyBudgetBurnWarning
+    exp_alerts: []
+- name: target-down
+  input_series:
+  - series: up{job="sre-api",instance="app:8000"}
+    values: 0+0x5
+  alert_rule_test:
+  - eval_time: 3m
+    alertname: SreApiUnavailable
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+        service: sre-api
+        job: sre-api
+      exp_annotations: &id001
+        summary: No healthy API scrape targets
+        runbook_url: https://github.com/jdj333/kubernetes-sre-observability/blob/main/docs/runbook.md#missing-telemetry
+- name: target-missing
+  input_series: []
+  alert_rule_test:
+  - eval_time: 3m
+    alertname: SreApiUnavailable
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+        service: sre-api
+        job: sre-api
+      exp_annotations: *id001
+- name: one-replica-healthy
+  input_series:
+  - series: up{job="sre-api",instance="a"}
+    values: 0+0x5
+  - series: up{job="sre-api",instance="b"}
+    values: 1+0x5
+  alert_rule_test:
+  - eval_time: 3m
+    alertname: SreApiUnavailable
+    exp_alerts: []
