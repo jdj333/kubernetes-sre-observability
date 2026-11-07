@@ -1,0 +1,74 @@
+groups:
+- name: sre-alerts
+  rules:
+  - alert: AvailabilityBudgetBurnPage
+    expr: (sre:availability:bad_ratio1h > 14.4 * 0.001) and (sre:availability:bad_ratio5m
+      > 14.4 * 0.001)
+    for: 2m
+    labels:
+      severity: critical
+      service: sre-api
+      slo: availability
+    annotations:
+      summary: Availability error budget is burning too fast
+      description: Both 1h and 5m exceed 14.4x budget burn. Inspect request rate,
+        errors, latency, and traces.
+      runbook_url: https://github.com/jdj333/kubernetes-sre-observability/blob/main/docs/runbook.md#budget-burn
+  - alert: AvailabilityBudgetBurnWarning
+    expr: (sre:availability:bad_ratio6h > 6 * 0.001) and (sre:availability:bad_ratio30m
+      > 6 * 0.001)
+    for: 5m
+    labels:
+      severity: warning
+      service: sre-api
+      slo: availability
+    annotations:
+      summary: Availability error budget is burning too fast
+      description: Both 6h and 30m exceed 6x budget burn. Inspect request rate, errors,
+        latency, and traces.
+      runbook_url: https://github.com/jdj333/kubernetes-sre-observability/blob/main/docs/runbook.md#budget-burn
+  - alert: LatencyBudgetBurnPage
+    expr: (sre:latency:bad_ratio1h > 14.4 * 0.01) and (sre:latency:bad_ratio5m > 14.4
+      * 0.01)
+    for: 2m
+    labels:
+      severity: critical
+      service: sre-api
+      slo: latency
+    annotations:
+      summary: Latency error budget is burning too fast
+      description: Both 1h and 5m exceed 14.4x budget burn. Inspect request rate,
+        errors, latency, and traces.
+      runbook_url: https://github.com/jdj333/kubernetes-sre-observability/blob/main/docs/runbook.md#budget-burn
+  - alert: LatencyBudgetBurnWarning
+    expr: (sre:latency:bad_ratio6h > 6 * 0.01) and (sre:latency:bad_ratio30m > 6 *
+      0.01)
+    for: 5m
+    labels:
+      severity: warning
+      service: sre-api
+      slo: latency
+    annotations:
+      summary: Latency error budget is burning too fast
+      description: Both 6h and 30m exceed 6x budget burn. Inspect request rate, errors,
+        latency, and traces.
+      runbook_url: https://github.com/jdj333/kubernetes-sre-observability/blob/main/docs/runbook.md#budget-burn
+  - alert: SreApiUnavailable
+    expr: (sum by (job) (up{job="sre-api"}) == 0) or absent(up{job="sre-api"})
+    for: 1m
+    labels:
+      severity: critical
+      service: sre-api
+    annotations:
+      summary: No healthy API scrape targets
+      runbook_url: https://github.com/jdj333/kubernetes-sre-observability/blob/main/docs/runbook.md#missing-telemetry
+  - alert: SreApiNoTraffic
+    expr: (sum by (job) (increase(sre_http_requests_total{job="sre-api",status_code=~"2..|5.."}[10m]))
+      == 0) and on (job) (max by (job) (up{job="sre-api"}) == 1)
+    for: 10m
+    labels:
+      severity: info
+      service: sre-api
+    annotations:
+      summary: API is scrapeable but has no eligible traffic
+      runbook_url: https://github.com/jdj333/kubernetes-sre-observability/blob/main/docs/runbook.md#missing-telemetry
